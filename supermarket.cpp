@@ -2,6 +2,7 @@
 
 #include <string>
 
+#include <cctype>
 using namespace std;
 
 struct Product {
@@ -135,18 +136,42 @@ int binarySearch(Product arr[], int size, string key) {
 
 }
 
+//checking for letters
+
+bool checkletter(string name) {
+    int size = name.length();
+
+    for (int i = 0; i < size; i++) {
+        if (!isalpha(name[i])) {  
+            return false;
+        }
+    }
+    return true;
+}
+
+
+
+
 // Function to Add Product
-
 void addProduct() {
-
+    
+    string tempvar;
+    
     if (productCount < MAX_PRODUCTS) {
-
         cout << "Enter product name: ";
+        
+        cin.ignore();
+        getline(cin, tempvar);
 
-        cin >> products[productCount].name;
+        if (!checkletter(tempvar)) { 
+            cout << "Not possible\n";  
+            return;  
+        }
+        else{
+            products[productCount].name = tempvar;
+        }
 
         cout << "Enter product price: ";
-
         cin >> products[productCount].price;
 
         productCount++;
@@ -154,13 +179,9 @@ void addProduct() {
         quickSort(products, 0, productCount - 1);
 
         cout << "Product added and sorted by price!\n";
-
     } else {
-
         cout << "Product list is full!\n";
-
     }
-
 }
 
 // Function to Update Product Price
@@ -170,8 +191,16 @@ void updateProduct() {
     string name;
 
     cout << "Enter product name to update: ";
+    
 
-    cin >> name;
+    cin.ignore();
+        getline(cin, name);
+
+        if (!checkletter(name)) { 
+            cout << "Not possible\n";  
+            return;  
+        }
+
 
     int index = binarySearch(products, productCount, name);
 
@@ -233,7 +262,13 @@ void deleteProduct() {
 
     cout << "Enter product name to delete: ";
 
-    cin >> name;
+     cin.ignore();
+        getline(cin, name);
+
+        if (!checkletter(name)) { 
+            cout << "Not possible\n";  
+            return;  
+        }
 
     int index = binarySearch(products, productCount, name);
 
@@ -267,7 +302,13 @@ void searchProduct() {
 
     cout << "Enter product name to search: ";
 
-    cin >> name;
+     cin.ignore();
+        getline(cin, name);
+
+        if (!checkletter(name)) { 
+            cout << "Not possible\n";  
+            return;  
+        }
 
     int index = binarySearch(products, productCount, name);
 
