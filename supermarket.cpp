@@ -142,7 +142,7 @@ bool checkletter(string name) {
     int size = name.length();
 
     for (int i = 0; i < size; i++) {
-        if (!isalpha(name[i])) {  
+        if (!isalpha(name[i])&& name[i] != ' ') {  
             return false;
         }
     }
