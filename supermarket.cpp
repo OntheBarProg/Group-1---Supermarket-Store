@@ -1,8 +1,9 @@
 #include <iostream>
-
+#include <fstream>
 #include <string>
-
 #include <cctype>
+#include <iomanip>
+
 using namespace std;
 
 struct Product {
@@ -18,6 +19,44 @@ const int MAX_PRODUCTS = 100;
 Product products[MAX_PRODUCTS];
 
 int productCount = 0;
+
+// Function to load product data from file
+
+void loadFromFile() {
+    ifstream file("MarketDataa.txt");
+
+    if (!file) {
+        // File doesn't exist, create an empty file
+        ofstream newfile("MarketDataa.txt");
+        newfile.close();
+        return;
+    }
+
+    productCount = 0;
+    while (getline(file, products[productCount].name) && file >> products[productCount].price) {
+        file.ignore(); // Ignore newline after price to avoid reading issues
+        productCount++;
+
+        if (productCount >= MAX_PRODUCTS) break;
+    }
+    file.close();
+}
+
+// Function to save product data to file
+void saveToFile() {
+    ofstream file("MarketDataa.txt", ios::trunc); 
+
+    if (!file) {
+        cout << "Error saving data to file!\n";
+        return;
+    }
+
+    for (int i = 0; i < productCount; i++) {
+        file << products[i].name << endl << products[i].price << endl;
+    }
+
+    file.close();
+}
 
 // Quick Sort for Sorting by Price (Descending Order)
 
@@ -149,219 +188,283 @@ bool checkletter(string name) {
     return true;
 }
 
+// Checking for existing product name (COMMENT IF NOT NEEDED)
 
+bool equalsIgnoreCase(const string& a, const string& b) {
+	
+    if (a.length() != b.length()) return false;
+    
+    for (size_t i = 0; i < a.length(); i++) {
+    	
+        if (tolower(a[i]) != tolower(b[i])) return false;
+    }
+    
+    return true;
+}
+
+//UI STUFF
+void printHeader(const string& title) {
+	
+    cout << "\n+---------------------------------------+" << endl;
+    
+    cout << "| " << left << setw(37) << title << " |" << endl;
+    
+    cout << "+---------------------------------------+" << endl;
+}
+
+void printMessage(const string& message, bool isError = false) {
+	
+    string border = isError ? "!!! " : "";
+    
+    cout << "\n" << border << "+ " << left << setw(36) << message << " +" << border << endl;
+    
+}
+
+
+void viewProductsTable() {
+	
+    cout << "+---------------------------------------+" << endl;
+    
+    cout << "| " << left << setw(25) << "Product Name" << " | " << setw(10) << "Price" << "|" << endl;
+    
+    cout << "+---------------------------------------+" << endl;
+    
+    for (int i = 0; i < productCount; i++) {
+    	
+        cout << "| " << left << setw(25) << products[i].name 
+        
+             << " | $" << setw(9) << fixed << setprecision(2) << products[i].price << " |" << endl;
+    }
+    cout << "+---------------------------------------+" << endl;
+}
+//UI STUFF
 
 
 // Function to Add Product
 void addProduct() {
+    printHeader("ADD NEW PRODUCT");
     
     string tempvar;
     
     if (productCount < MAX_PRODUCTS) {
-        cout << "Enter product name: ";
+    	
+       
+        cout << "| Enter product name: ";
         
         cin.ignore();
+        
         getline(cin, tempvar);
 
-        if (!checkletter(tempvar)) { 
-            cout << "Not possible\n";  
-            return;  
+        // Check for existing product (case-insensitive)
+        bool exists = false;
+        
+        for (int i = 0; i < productCount; i++) {
+        	
+            if (equalsIgnoreCase(products[i].name, tempvar)) {
+            	
+                exists = true;
+                
+                break;
+                
+            }
         }
-        else{
-            products[productCount].name = tempvar;
+        
+        if (exists) {
+		// Checking for existing product name (COMMENT IF NOT NEEDED)
+        	
+            printMessage("Product already exists! Please try again.", true);
+            
+            return;
         }
 
-        cout << "Enter product price: ";
+        if (!checkletter(tempvar)) { 
+        
+            printMessage("Invalid characters! Use letters only.", true);
+            
+            return;  
+        }
+
+        products[productCount].name = tempvar;
+
+        cout << "| Enter product price: $";
+        
         cin >> products[productCount].price;
 
         productCount++;
-
+        
         quickSort(products, 0, productCount - 1);
+        
+        saveToFile();
 
-        cout << "Product added and sorted by price!\n";
+        printMessage("Product added successfully!");
+        
     } else {
-        cout << "Product list is full!\n";
+    	
+        printMessage("Product list is full!", true);
     }
 }
+
 
 // Function to Update Product Price
 
 void updateProduct() {
-
-    string name;
-
-    cout << "Enter product name to update: ";
+	
+    printHeader("UPDATE PRODUCT");
     
-
+    string name;
+    
+    cout << "| Enter product name: ";
+    
     cin.ignore();
-        getline(cin, name);
-
-        if (!checkletter(name)) { 
-            cout << "Not possible\n";  
-            return;  
-        }
-
+    
+    getline(cin, name);
 
     int index = binarySearch(products, productCount, name);
-
+    
     if (index != -1) {
-
-        cout << "Enter new price: ";
-
+    	
+        cout << "| Current price: $" << products[index].price << endl;
+        
+        cout << "| Enter new price: $";
+        
         cin >> products[index].price;
-
+        
         quickSort(products, 0, productCount - 1);
-
-        cout << "Product price updated!\n";
-
+        
+        saveToFile();
+        
+        printMessage("Price updated successfully!");
+        
     } else {
-
-        cout << "Product not found!\n";
-
+    	
+        printMessage("Product not found!", true);
+        
     }
-
 }
 
 // Function to View Products Sorted by Price
 
-void viewProductsbyPrice() {
-
+void viewProductsbyPrice() { // shortened version (made viewProductsbyPrice)
+	
+    printHeader("PRODUCTS BY PRICE");
+    
     quickSort(products, 0, productCount - 1);
-
-    cout << "\n--- Product List (Sorted by Price: High to Low) ---\n";
-
-    for (int i = 0; i < productCount; i++) {
-
-        cout << products[i].name << " - $" << products[i].price << "\n";
-
-    }
-
+    
+    viewProductsTable();
 }
 
 // Function to View Products Alphabetically
 
-void viewProductsbyAlpha() {
-
+void viewProductsbyAlpha() { // shortened version (made viewProductsbyPrice)
+	
+    printHeader("PRODUCTS ALPHABETICALLY");
+    
     mergeSort(products, 0, productCount - 1);
-
-    cout << "\n--- Product List (Sorted Alphabetically) ---\n";
-
-    for (int i = 0; i < productCount; i++) {
-
-        cout << products[i].name << " - $" << products[i].price << "\n";
-
-    }
-
+    
+    viewProductsTable();
+    
 }
 
 // Function to Delete Product
 
 void deleteProduct() {
-
+	
+    printHeader("DELETE PRODUCT");
+    
     string name;
-
-    cout << "Enter product name to delete: ";
-
-     cin.ignore();
-        getline(cin, name);
-
-        if (!checkletter(name)) { 
-            cout << "Not possible\n";  
-            return;  
-        }
+    
+    cout << "| Enter product name: ";
+    
+    cin.ignore();
+    
+    getline(cin, name);
 
     int index = binarySearch(products, productCount, name);
-
+    
     if (index != -1) {
-
+    	
         for (int i = index; i < productCount - 1; i++) {
-
+        	
             products[i] = products[i + 1];
-
         }
-
+        
         productCount--;
-
+        
         quickSort(products, 0, productCount - 1);
-
-        cout << "Product deleted and sorted!\n";
-
-    } else {
-
-        cout << "Product not found!\n";
-
+        
+        saveToFile();
+        
+        printMessage("Product deleted successfully!");
+        
+    } 
+	
+	else {
+    	
+        printMessage("Product not found!", true);
+        
     }
-
+    
 }
-
 // Function to Search Product
 
 void searchProduct() {
-
+	
+    printHeader("SEARCH PRODUCT");
+    
     string name;
-
-    cout << "Enter product name to search: ";
-
-     cin.ignore();
-        getline(cin, name);
-
-        if (!checkletter(name)) { 
-            cout << "Not possible\n";  
-            return;  
-        }
+    
+    cout << "| Enter product name: ";
+    
+    cin.ignore();
+    
+    getline(cin, name);
+    
 
     int index = binarySearch(products, productCount, name);
-
+    
     if (index != -1) {
-
-        cout << "Product found: " << products[index].name << " - $" << products[index].price << "\n";
-
-    } else {
-
-        cout << "Product not found!\n";
-
+    	
+        cout << "+---------------------------------------+" << endl;
+        cout << "| " << left << setw(25) << "Product Name" << " | " << setw(10) << "Price" << " |" << endl;
+        cout << "+---------------------------------------+" << endl;
+        cout << "| " << left << setw(25) << products[index].name << " | $" << setw(9) << fixed << setprecision(2) << products[index].price << " |" << endl;
+        cout << "+---------------------------------------+" << endl;
+        
+    } 
+	else {
+		
+        printMessage("Product not found!", true);
     }
-
 }
-
 // Main Menu
 
 void menu() {
-
+    string input;
     int choice;
 
-    do {
-
-        cout << "\n========= Store Management System =========\n";
-
-        cout << "1. Add New Product\n";
-
-        cout << "2. View Products by Price\n";
-
-        cout << "3. View Products by Alphabetically\n";
-
-        cout << "4. Update Product Details\n";
-
-        cout << "5. Delete Product\n";
-
-        cout << "6. Search Product\n";
-
-        cout << "7. Exit\n";
-
-        cout << "===========================================\n";
-
+   do {
+        cout << "\n+---------------------------------------+" << endl;
+        cout << "|         STORE MANAGEMENT SYSTEM       |" << endl;
+        cout << "+---------------------------------------+" << endl;
+        cout << "| " << left << setw(35) << "1. Add New Product" << "   |" << endl;
+        cout << "| " << left << setw(35) << "2. View Products by Price" << "   |" << endl;
+        cout << "| " << left << setw(35) << "3. View Products Alphabetically" << "   |" << endl;
+        cout << "| " << left << setw(35) << "4. Update Product Details" << "   |" << endl;
+        cout << "| " << left << setw(35) << "5. Delete Product" << "   |" << endl;
+        cout << "| " << left << setw(35) << "6. Search Product" << "   |" << endl;
+        cout << "| " << left << setw(35) << "7. Exit" << "   |" << endl;
+        cout << "+---------------------------------------+" << endl;
         cout << "Enter your choice: ";
 
-        while (!(cin >> choice) || choice < 1 || choice > 7) {
+        cin >> input;
 
-            cin.clear();
-
-            cin.ignore(1000, '\n');
-
+        if (input.length() != 1 || input[0] < '1' || input[0] > '7') {
             cout << "Invalid input! Please enter a number between 1 and 7: ";
-
+            continue;
         }
 
+        choice = input[0] - '0';
+        
         switch (choice) {
 
             case 1: addProduct();
@@ -394,17 +497,21 @@ void menu() {
 
             default: cout << "Invalid choice! Try again.\n";
 
+                break;
+
         }
 
     } while (choice != 7);
 
 }
 
-int main() {
 
+int main() {
+	
+	loadFromFile();
+	
     menu();
 
     return 0;
 
 }
- 
